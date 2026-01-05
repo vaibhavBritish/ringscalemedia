@@ -1,0 +1,9 @@
+services:
+  ringscale:
+    container_name: ringscale-media
+    build: .
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3003:3000"
