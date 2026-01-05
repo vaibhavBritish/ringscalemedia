@@ -3,29 +3,44 @@ import React, { useState } from "react"
 
 const WhatWeDoLayout = ({ children }: { children: React.ReactNode }) => {
 
-  const [formdata, setformdata] = useState({
+  const [formdata, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     companyName: "",
     phone: "",
-    message: ""
+    message: "",
+    consent: false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setformdata({
-      ...formdata,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const [loading, setLoading] = useState(false);
 
-  const api = "/api";
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!formdata.consent) {
+      alert("Please accept Terms & Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const response = await fetch(`${api}/form`, {
+      const response = await fetch("/api/form", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,27 +51,27 @@ const WhatWeDoLayout = ({ children }: { children: React.ReactNode }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Error:", data.message || "Something went wrong");
-        alert(data.message || "Failed to submit form");
-        return;
+        throw new Error(data.message || "Something went wrong");
       }
 
-      console.log("Form submitted successfully:", data);
-      alert("Form submitted successfully!");
+      alert("✅ Form submitted successfully!");
 
-      setformdata({
+      setFormData({
         firstName: "",
         lastName: "",
         email: "",
         companyName: "",
         phone: "",
-        message: ""
-      })
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Error submitting form");
+        message: "",
+        consent: false,
+      });
+    } catch (error: any) {
+      alert(error.message || "❌ Failed to submit form");
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <div className="w-full">
 
@@ -161,6 +176,29 @@ const WhatWeDoLayout = ({ children }: { children: React.ReactNode }) => {
                     value={formdata.message}
                     className="w-full p-3 sm:p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2D2476]"
                   />
+
+                  <label className="flex items-start gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      name="consent"
+                      checked={formdata.consent}
+                      onChange={handleChange}
+                      className="mt-1 accent-pink-600"
+                    />
+                    <span>
+                      I agree to the{" "}
+                      <a href="/terms-of-service" className="text-pink-600 underline">
+                        Terms & Conditions
+                      </a>{" "}
+                      and{" "}
+                      <a
+                        href="/privacy-and-policy"
+                        className="text-pink-600 underline"
+                      >
+                        Privacy Policy
+                      </a>
+                    </span>
+                  </label>
 
                   <button
                     type="submit"

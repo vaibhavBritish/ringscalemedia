@@ -8,10 +8,10 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { firstName, lastName,companyName, email, phone, message } = body;
+    const { firstName, lastName,companyName, email, phone, message ,consent} = body;
 
 
-    if (!firstName || !lastName || !companyName || !email || !message) {
+    if (!firstName || !lastName || !companyName || !email || !message || !consent || !phone) {
       return NextResponse.json(
         { success: false, message: "Name, email and message are required" },
         { status: 400 }
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
         email,
         phone,
         message,
+        consent
       },
     });
 

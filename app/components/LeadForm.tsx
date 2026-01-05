@@ -1,29 +1,46 @@
-import React, { useState } from 'react';
+"use client";
+
+import React, { useState } from "react";
 
 const LeadForm = () => {
-  const [formdata, setformdata] = useState({
+  const [formdata, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     companyName: "",
     phone: "",
-    message: ""
+    message: "",
+    consent: false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setformdata({
-      ...formdata,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const [loading, setLoading] = useState(false);
 
-  const api = "/api";
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!formdata.consent) {
+      alert("Please accept Terms & Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const response = await fetch(`${api}/form`, {
+      const response = await fetch("/api/form", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,141 +51,137 @@ const LeadForm = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Error:", data.message || "Something went wrong");
-        alert(data.message || "Failed to submit form");
-        return;
+        throw new Error(data.message || "Something went wrong");
       }
 
-      console.log("Form submitted successfully:", data);
-      alert("Form submitted successfully!");
+      alert("✅ Form submitted successfully!");
 
-      setformdata({
+      setFormData({
         firstName: "",
         lastName: "",
         email: "",
         companyName: "",
         phone: "",
-        message: ""
-      })
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Error submitting form");
+        message: "",
+        consent: false,
+      });
+    } catch (error: any) {
+      alert(error.message || "❌ Failed to submit form");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <section className="max-w-6xl mx-auto mt-20 px-6 mb-20">
-      <div className="flex flex-col md:flex-row justify-between gap-10">
-      
-        <div className="md:w-1/2 flex flex-col justify-center">
-          <h1 className="text-pink-600 text-3xl font-serif font-bold mb-4">
-            Start your Journey with Ring Scale Media
+      <div className="grid md:grid-cols-2 gap-12 items-center">
+
+        <div>
+          <h1 className="text-pink-600 text-3xl font-bold mb-4">
+            Start your journey with RingScale Media
           </h1>
-          <p className="text-gray-700 leading-relaxed text-justify">
-            Let’s dive into your ideas, achieve your goals with precision, and design tailored strategies
-            that fit your needs. We’ll work with you to set clear expectations, goals, and metrics to ensure
-            meaningful growth for your brand.
+          <p className="text-gray-700 leading-relaxed">
+            Let’s bring your ideas to life with tailored strategies, clear
+            goals, and measurable growth. Share your requirements and our team
+            will connect with you.
           </p>
         </div>
 
-    
-        <div className="md:w-1/2 bg-white shadow-lg rounded-2xl p-8 border border-pink-100">
+
+        <div className="bg-white shadow-xl rounded-2xl p-8 border">
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="flex flex-col">
-              <label htmlFor="firstName" className="text-sm font-medium text-gray-600 mb-1">
-                First Name
-              </label>
-              <input
-                id="firstName"
-                type="text"
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="First Name"
                 name="firstName"
-                onChange={handleChange}
                 value={formdata.firstName}
-                placeholder="Enter your first name"
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                onChange={handleChange}
+                required
               />
-            </div>
-
-            <div className="flex flex-col">
-              <label htmlFor="lastName" className="text-sm font-medium text-gray-600 mb-1">
-                Last Name
-              </label>
-              <input
-                id="lastName"
-                type="text"
+              <Input
+                label="Last Name"
                 name="lastName"
-                onChange={handleChange}
                 value={formdata.lastName}
-                placeholder="Enter your last name"
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label htmlFor="email" className="text-sm font-medium text-gray-600 mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
                 onChange={handleChange}
-                value={formdata.email}
-                placeholder="Enter your email address"
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                required
               />
             </div>
 
-            <div className="flex flex-col">
-              <label htmlFor="company" className="text-sm font-medium text-gray-600 mb-1">
-                Company Name
-              </label>
-              <input
-                id="company"
-                type="text"
-                name="companyName"
-                onChange={handleChange}
-                value={formdata.companyName}
-                placeholder="Enter your company name"
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              />
-            </div>
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              value={formdata.email}
+              onChange={handleChange}
+              required
+            />
 
-            <div className="flex flex-col">
-              <label htmlFor="phone" className="text-sm font-medium text-gray-600 mb-1">
-                Phone Number
-              </label>
-              <input
-                id="phone"
-                type="text"
-                name="phone"
-                onChange={handleChange}
-                value={formdata.phone}
-                placeholder="Enter your phone number"
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              />
-            </div>
+            <Input
+              label="Company Name"
+              name="companyName"
+              value={formdata.companyName}
+              onChange={handleChange}
+            />
 
-            <div className="flex flex-col">
-              <label htmlFor="message" className="text-sm font-medium text-gray-600 mb-1">
+            <Input
+              label="Phone Number"
+              name="phone"
+              value={formdata.phone}
+              onChange={handleChange}
+            />
+
+            <div>
+              <label className="text-sm font-medium text-gray-600">
                 Message
               </label>
               <textarea
-                id="message"
-                rows={4}
                 name="message"
-                onChange={handleChange}
+                rows={4}
                 value={formdata.message}
-                placeholder="Write your message..."
-                className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              ></textarea>
+                onChange={handleChange}
+                placeholder="Tell us about your project..."
+                className="mt-1 w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-pink-500 outline-none"
+              />
             </div>
 
+     
+            <label className="flex items-start gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                name="consent"
+                checked={formdata.consent}
+                onChange={handleChange}
+                className="mt-1 accent-pink-600"
+              />
+              <span>
+                I agree to the{" "}
+                <a href="/terms-of-service" className="text-pink-600 underline">
+                  Terms & Conditions
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy-and-policy"
+                  className="text-pink-600 underline"
+                >
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+
+          
             <button
               type="submit"
-              className="w-full text-black font-semibold py-2 rounded-md transition duration-300 shadow-md"
+              disabled={loading}
+              className={`w-full py-3 rounded-md font-semibold transition
+                ${
+                  loading
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-pink-600 text-white hover:bg-pink-700"
+                }
+              `}
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
@@ -178,3 +191,27 @@ const LeadForm = () => {
 };
 
 export default LeadForm;
+
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: any) => (
+  <div>
+    <label className="text-sm font-medium text-gray-600">
+      {label}
+      {required && <span className="text-pink-600">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      required={required}
+      className="mt-1 w-full border rounded-md px-4 py-2 focus:ring-2 focus:ring-pink-500 outline-none"
+    />
+  </div>
+);

@@ -15,5 +15,6 @@ model contactUs {
   email       String
   phone       String
   message     String
+  consent     Boolean @default(false)
   createdAt   DateTime @default(now())
 }
